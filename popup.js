@@ -19,7 +19,7 @@ async function createOrUpdateTab(url) {
   const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   if (currentTab && currentTab.url === 'chrome://newtab/') {
-    return chrome.tabs.update(currentTab.id, { url });
+    return chrome.tabs.update(currentTab.id, { url, active: true });
   }
 
   return chrome.tabs.create({ url, active: true });
@@ -242,12 +242,22 @@ async function startAutoScroll(tabId, speed) {
           const elapsed = timestamp - state.lastTimestamp;
           const distance = (pixelsPerSecond * elapsed) / 1000;
 
-          const maxScroll =
-            document.documentElement.scrollHeight - window.innerHeight;
-          const currentScroll = window.scrollY;
+          const scrollingElement =
+            document.scrollingElement || document.documentElement || document.body;
+
+          const maxScroll = Math.max(
+            0,
+            (scrollingElement?.scrollHeight || 0) - window.innerHeight
+          );
+          const currentScroll = scrollingElement?.scrollTop ?? window.scrollY;
           const nextScroll = Math.min(currentScroll + distance, maxScroll);
 
-          window.scrollTo({ top: nextScroll, behavior: 'auto' });
+          if (scrollingElement) {
+            scrollingElement.scrollTop = nextScroll;
+          } else {
+            window.scrollTo({ top: nextScroll, behavior: 'auto' });
+          }
+
           state.lastTimestamp = timestamp;
 
           if (nextScroll >= maxScroll) {
