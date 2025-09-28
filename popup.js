@@ -15,14 +15,14 @@ function setStatus(message, isError = false) {
   statusEl.style.color = isError ? '#f87171' : '#a5b4fc';
 }
 
-async function createOrUpdateTab(url) {
+async function loadUrlInCurrentTab(url) {
   const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  if (currentTab && currentTab.url === 'chrome://newtab/') {
-    return chrome.tabs.update(currentTab.id, { url, active: true });
+  if (!currentTab) {
+    throw new Error('No active tab found to load the requested URL.');
   }
 
-  return chrome.tabs.create({ url, active: true });
+  return chrome.tabs.update(currentTab.id, { url, active: true });
 }
 
 function waitForTabComplete(tabId, timeoutMs = 30000) {
@@ -292,10 +292,10 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
-  setStatus('Opening tab and preparing scroll…');
+  setStatus('Loading page and preparing scroll…');
 
   try {
-    const tab = await createOrUpdateTab(url);
+    const tab = await loadUrlInCurrentTab(url);
 
     await waitForTabComplete(tab.id).catch((error) => {
       console.warn('Falling back to a short delay while waiting for the tab:', error);
