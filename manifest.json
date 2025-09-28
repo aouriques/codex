@@ -10,8 +10,7 @@
   "permissions": [
     "scripting",
     "tabs",
-    "tabCapture",
-    "downloads"
+    "tabCapture"
   ],
   "host_permissions": [
     "<all_urls>"

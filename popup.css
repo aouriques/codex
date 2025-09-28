@@ -69,3 +69,40 @@ body {
   font-size: 0.8rem;
   opacity: 0.85;
 }
+
+.hidden {
+  display: none;
+}
+
+.result {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.result-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.result-link {
+  color: #93c5fd;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.result-link:hover {
+  text-decoration: underline;
+}
+
+.result-filename {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  word-break: break-all;
+}
