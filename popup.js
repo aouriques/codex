@@ -25,6 +25,64 @@ async function createOrUpdateTab(url) {
   return chrome.tabs.create({ url, active: true });
 }
 
+function waitForTabComplete(tabId, timeoutMs = 30000) {
+  return new Promise((resolve, reject) => {
+    let finished = false;
+
+    const cleanup = () => {
+      if (finished) {
+        return;
+      }
+
+      finished = true;
+      chrome.tabs.onUpdated.removeListener(handleUpdated);
+      chrome.tabs.onRemoved.removeListener(handleRemoved);
+      clearTimeout(timeoutId);
+    };
+
+    const handleUpdated = (updatedTabId, info) => {
+      if (updatedTabId === tabId && info.status === 'complete') {
+        cleanup();
+        resolve();
+      }
+    };
+
+    const handleRemoved = (removedTabId) => {
+      if (removedTabId === tabId) {
+        cleanup();
+        reject(new Error('The tab was closed before the page finished loading.'));
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error('Timed out waiting for the page to finish loading.'));
+    }, timeoutMs);
+
+    chrome.tabs.onUpdated.addListener(handleUpdated);
+    chrome.tabs.onRemoved.addListener(handleRemoved);
+
+    chrome.tabs.get(tabId, (tab) => {
+      if (chrome.runtime.lastError) {
+        cleanup();
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+
+      if (!tab) {
+        cleanup();
+        reject(new Error('Unable to locate the requested tab.'));
+        return;
+      }
+
+      if (tab.status === 'complete') {
+        cleanup();
+        resolve();
+      }
+    });
+  });
+}
+
 function resetRecorderState() {
   if (recorderState.stream) {
     recorderState.stream.getTracks().forEach((track) => track.stop());
@@ -229,7 +287,10 @@ form.addEventListener('submit', async (event) => {
   try {
     const tab = await createOrUpdateTab(url);
 
-    await new Promise((resolve) => setTimeout(resolve, 750));
+    await waitForTabComplete(tab.id).catch((error) => {
+      console.warn('Falling back to a short delay while waiting for the tab:', error);
+      return new Promise((resolve) => setTimeout(resolve, 1000));
+    });
 
     await startRecording();
     setStatus('Auto-scroll and recording started. Keep this popup open until the download begins.');
