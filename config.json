@@ -1,0 +1,11 @@
+{
+  "outputDir": "./recordings",
+  "videoWidth": 2560,
+  "videoHeight": 1440,
+  "deviceScaleFactor": 1.0,
+  "scrollPixelsPerStep": 2,
+  "msBetweenSteps": 16,
+  "preRollMs": 1000,
+  "postRollMs": 1000,
+  "networkIdleWaitMs": 1500
+}
